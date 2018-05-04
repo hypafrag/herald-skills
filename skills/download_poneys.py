@@ -59,7 +59,7 @@ def _get_link(s, e):
 
 def _download(link, s, e):
     tmp_file = '/tmp/MLP{:0>2}x{:0>2}.mkv'.format(s, e)
-    file = '/home/hypafrag/video/MLPHD/My Little Pony: Friendship Is Magick {:0>2}x{:0>2}.mkv'.format(s, e)
+    file = '{}/My Little Pony: Friendship Is Magick {:0>2}x{:0>2}.mkv'.format(config.poneys.dir, s, e)
 
     r = requests.get(link, stream=True)
     if r.status_code == 200:
