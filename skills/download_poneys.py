@@ -101,5 +101,5 @@ def use():
     if link is not None:
         notifications.notify('Started downloading poneys S{:0>2}E{:0>2}')
         _download(link, s, e)
-        notifications.notify('Downloaded poneys S{:0>2}E{:0>2}')
+        notifications.notify('Downloaded poneys S{:0>2}E{:0>2}'.format(s, e))
         tv_shows.update()
