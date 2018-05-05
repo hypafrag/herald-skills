@@ -4,3 +4,5 @@ __pycache__
 config.py
 *.cer
 *.pem
+build
+run
