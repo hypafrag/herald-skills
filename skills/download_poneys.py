@@ -6,6 +6,7 @@ import shutil
 import config
 import re
 import requests
+import notifications
 
 plex = PlexServer('http://{}:{}'.format(config.plex.host, config.plex.port), config.plex.onlineToken)
 
@@ -92,5 +93,7 @@ def use():
 
     link, s, e = _get_link(last_season.index, last_episode.index + 1) or _get_link(last_season.index + 1, 1)
     if link is not None:
+        notifications.notify('Started downloading poneys S{:0>2}E{:0>2}')
         _download(link, s, e)
+        notifications.notify('Downloaded poneys S{:0>2}E{:0>2}')
         tv_shows.update()
