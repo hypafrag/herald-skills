@@ -7,6 +7,7 @@ import config
 import re
 import requests
 import notifications
+import os
 
 plex = PlexServer('http://{}:{}'.format(config.plex.host, config.plex.port), config.plex.onlineToken)
 
@@ -59,6 +60,10 @@ def _get_link(s, e):
     return None, None, None
 
 def _download(link, s, e):
+    stat_info = os.stat(config.poneys.dir)
+    uid = stat_info.st_uid
+    gid = stat_info.st_gid
+
     tmp_file = '/tmp/MLP{:0>2}x{:0>2}.mkv'.format(s, e)
     file = '{}/My Little Pony: Friendship Is Magick {:0>2}x{:0>2}.mkv'.format(config.poneys.dir, s, e)
 
@@ -67,7 +72,7 @@ def _download(link, s, e):
         with open(tmp_file, 'wb') as f:
             r.raw.decode_content = True
             file_size = int(r.headers.get('Content-Length'))
-            chunk_size = 16 * 1024
+            chunk_size = 64 * 1024
             read_size = 0
             while True:
                 buf = r.raw.read(chunk_size)
@@ -77,6 +82,7 @@ def _download(link, s, e):
                 # print('{}'.format(read_size / file_size))
                 f.write(buf)
 
+    os.chown(tmp_file, uid, gid)
     shutil.move(tmp_file, file)
 
 def use():
