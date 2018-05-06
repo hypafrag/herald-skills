@@ -4,12 +4,12 @@ import config
 
 _apns_host = 'gateway.sandbox.push.apple.com' if config.notifications.apns_sandbox else 'gateway.push.apple.com'
 
-def notify(message):
+def notify(message, sound='default', badge=0):
     payload = json.dumps({
         'aps': {
             'alert': message,
-            'sound': 'default',
-            'badge': 0,
+            'sound': sound,
+            'badge': badge,
         },
     }).encode('utf-8')
 
