@@ -23,9 +23,9 @@ def _get_poneys():
             return episode
 
 @asyncio.coroutine
-def _start_plex(atv):
+def _start_plex(atv, fast):
     yield from atv.remote_control.top_menu()
-    time.sleep(1)
+    time.sleep(1 if fast else 3)
     yield from atv.remote_control.down()
     for i in range(0, 4):
         yield from atv.remote_control.left()
@@ -52,12 +52,13 @@ def _poneys_skill_cr(loop):
     for i in range(0, 3):
         client = _get_plex_client()
         if client is None:
-            yield from _start_plex(atv)
+            yield from _start_plex(atv, i == 1)
+            time.sleep(1)
             continue
         try:
             client.playMedia(_get_poneys())
         except requests.exceptions.RequestException:
-            yield from _start_plex(atv)
+            time.sleep(0.5)
             continue
         break
     yield from atv.logout()
