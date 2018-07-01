@@ -11,6 +11,7 @@ plex = PlexServer('http://{}:{}'.format(config.plex.host, config.plex.port), con
 apple_tv = pyatv.AppleTVDevice(config.apple_tv.name, config.apple_tv.host, config.apple_tv.loginId)
 
 def _get_poneys():
+    print('Looking for poneys in PLEX library')
     tv_shows = plex.library.section('TV Shows')
     mlp = tv_shows.get('My Little Pony: Friendship is Magic')
     for season in mlp:
@@ -24,6 +25,7 @@ def _get_poneys():
 
 @asyncio.coroutine
 def _start_plex(atv, fast):
+    print('Starting PLEX')
     yield from atv.remote_control.top_menu()
     time.sleep(1 if fast else 3)
     yield from atv.remote_control.down()
@@ -37,6 +39,7 @@ def _start_plex(atv, fast):
     yield from atv.remote_control.select()
 
 def _get_plex_client():
+    print('Trying to connect to PLEX')
     client = None
     for i in range(0, 12):
         try:
@@ -48,9 +51,15 @@ def _get_plex_client():
 
 @asyncio.coroutine
 def _poneys_skill_cr(loop):
+    print('Connecting to Apple TV')
     atv = pyatv.connect_to_apple_tv(apple_tv, loop)
     for i in range(0, 3):
         client = _get_plex_client()
+        try:
+            if client is not None:
+                client.stop()
+        except requests.exceptions.ConnectionError:
+            client = None
         if client is None:
             yield from _start_plex(atv, i == 1)
             time.sleep(1)
@@ -61,7 +70,9 @@ def _poneys_skill_cr(loop):
             time.sleep(0.5)
             continue
         break
-    yield from atv.logout()
+
+    # yield from atv.logout()
+    yield from atv._session.close() # pyatv 0.3.10 has bug in atv.logout method, it doesn't await close()
 
 def use():
     loop = asyncio.get_event_loop()
