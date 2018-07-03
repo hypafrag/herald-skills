@@ -100,4 +100,7 @@ def use(args):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(_poneys_skill_cr(loop, episode))
     else:
-        kodi_rpc.play(_dlna_url(episode))
+        kodi_rpc.call('Input.Home', {})
+        url = _dlna_url(episode)
+        time.sleep(5)
+        kodi_rpc.play(url)
