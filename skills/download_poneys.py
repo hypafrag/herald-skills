@@ -85,7 +85,10 @@ def _download(link, s, e):
     os.chown(tmp_file, uid, gid)
     shutil.move(tmp_file, file)
 
-def use():
+def setup(argparser):
+    pass
+
+def use(args):
     tv_shows = plex.library.section('TV Shows')
     mlp = tv_shows.get('My Little Pony: Friendship is Magic')
 

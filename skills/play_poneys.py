@@ -6,6 +6,7 @@ import pyatv.interface
 import time
 import requests.exceptions
 import config
+import kodi_rpc
 
 plex = PlexServer('http://{}:{}'.format(config.plex.host, config.plex.port), config.plex.onlineToken)
 apple_tv = pyatv.AppleTVDevice(config.apple_tv.name, config.apple_tv.host, config.apple_tv.loginId)
@@ -20,7 +21,7 @@ def _get_poneys():
         for episode in season:
             if episode.isWatched:
                 continue
-            # print('S{}E{} - {}'.format(season.index, episode.index, episode.title))
+            print('S{}E{} - {}'.format(season.index, episode.index, episode.title))
             return episode
 
 @asyncio.coroutine
@@ -50,7 +51,7 @@ def _get_plex_client():
     return client
 
 @asyncio.coroutine
-def _poneys_skill_cr(loop):
+def _poneys_skill_cr(loop, episode):
     print('Connecting to Apple TV')
     atv = pyatv.connect_to_apple_tv(apple_tv, loop)
     for i in range(0, 3):
@@ -65,7 +66,7 @@ def _poneys_skill_cr(loop):
             time.sleep(1)
             continue
         try:
-            client.playMedia(_get_poneys())
+            client.playMedia(episode)
         except requests.exceptions.RequestException:
             time.sleep(0.5)
             continue
@@ -74,6 +75,29 @@ def _poneys_skill_cr(loop):
     # yield from atv.logout()
     yield from atv._session.close() # pyatv 0.3.10 has bug in atv.logout method, it doesn't await close()
 
-def use():
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(_poneys_skill_cr(loop))
+def _dlna_url(episode):
+    try:
+        print('Looking for poneys in Kodi library')
+        print('Opening {}'.format(config.kodi.tv_shows_source))
+        tv_shows_src = kodi_rpc.source('video', config.kodi.tv_shows_source)
+        print('Opening {}'.format(episode.grandparentTitle))
+        mlp_dir = kodi_rpc.get(tv_shows_src, episode.grandparentTitle)
+        print('Opening {}'.format(episode.parentTitle))
+        season_dir = kodi_rpc.get(mlp_dir, episode.parentTitle)
+        print('Opening {}'.format(episode.title))
+        episode_url = kodi_rpc.get(season_dir, episode.index - 1)['file']
+    except StopIteration:
+        return
+    return episode_url
+
+def setup(argparser):
+    argparser.description = 'Play poneys'
+    argparser.add_argument('where', help='where to play', choices=['plex', 'kodi'], default='plex', nargs='?')
+
+def use(args):
+    episode = _get_poneys()
+    if args.where == 'plex':
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(_poneys_skill_cr(loop, episode))
+    else:
+        kodi_rpc.play(_dlna_url(episode))

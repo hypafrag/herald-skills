@@ -1,13 +1,18 @@
 import argparse
+import sys
 
-def skill(name):
-    __import__('skills.' + name, fromlist=['']).use()
+def skill(name, argv):
+    skill = __import__('skills.' + name, fromlist=[''])
+    argparser = argparse.ArgumentParser(name)
+    skill.setup(argparser)
+    args = argparser.parse_args(argv)
+    skill.use(args)
 
-parser = argparse.ArgumentParser(description='Using Herald skills')
-parser.add_argument('skill', help='skill to use', choices=[
+argparser = argparse.ArgumentParser(description='Using Herald skills')
+argparser.add_argument('skill', help='skill to use', choices=[
     'download_poneys',
     'play_poneys'
 ])
 
-args = parser.parse_args()
-skill(args.skill)
+args = argparser.parse_args(sys.argv[1:2])
+skill(args.skill, sys.argv[2:])
