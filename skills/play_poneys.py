@@ -92,11 +92,11 @@ def _dlna_url(episode):
 
 def setup(argparser):
     argparser.description = 'Play poneys'
-    argparser.add_argument('where', help='where to play', choices=['plex', 'kodi'], default='plex', nargs='?')
+    argparser.add_argument('where', help='where to play', choices=['main', 'lounge'], default='main', nargs='?')
 
 def use(args):
     episode = _get_poneys()
-    if args.where == 'plex':
+    if args.where == 'lounge':
         loop = asyncio.get_event_loop()
         loop.run_until_complete(_poneys_skill_cr(loop, episode))
     else:
