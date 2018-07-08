@@ -96,7 +96,7 @@ def setup(argparser):
 
 def use(args):
     episode = _get_poneys()
-    if args.where == 'lounge':
+    if args.where == 'main':
         loop = asyncio.get_event_loop()
         loop.run_until_complete(_poneys_skill_cr(loop, episode))
     else:
