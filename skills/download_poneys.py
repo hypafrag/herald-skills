@@ -100,7 +100,9 @@ def use(args):
     for last_episode in last_season.episodes():
         pass
 
-    link, s, e = _get_link(last_season.index, last_episode.index + 1) or _get_link(last_season.index + 1, 1)
+    link, s, e = _get_link(last_season.index, last_episode.index + 1)
+    if link is None:
+        link, s, e = _get_link(last_season.index + 1, 1)
     if link is not None:
         notifications.notify('Started downloading poneys S{:0>2}E{:0>2}'.format(s, e), sound='yay.aiff')
         _download(link, s, e)
