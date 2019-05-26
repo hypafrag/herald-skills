@@ -11,7 +11,8 @@ def skill(name, argv):
 argparser = argparse.ArgumentParser(description='Using Herald skills')
 argparser.add_argument('skill', help='skill to use', choices=[
     'download_poneys',
-    'play_poneys'
+    'play_poneys',
+    'notify'
 ])
 
 args = argparser.parse_args(sys.argv[1:2])
