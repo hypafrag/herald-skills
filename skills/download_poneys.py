@@ -11,12 +11,13 @@ import os
 
 plex = PlexServer('http://{}:{}'.format(config.plex.host, config.plex.port), config.plex.onlineToken)
 
+
 class _YPParser(HTMLParser):
     def __init__(self):
         super().__init__()
         self._junk = False
         self._hrefs = {}
-        self._link_regex = re.compile('^http.*(\d\dx\d\d).*\.mkv$')
+        self._link_regex = re.compile(r'^http.*(\d\dx\d\d).*\.mkv$')
 
     def error(self, message):
         pass
@@ -42,6 +43,7 @@ class _YPParser(HTMLParser):
     def links(self):
         return self._hrefs
 
+
 def _season_episode_links(i):
     parser = _YPParser()
     url = config.poneys.seasonListUrlTemplate.format(i)
@@ -52,12 +54,14 @@ def _season_episode_links(i):
 
     return parser.links()
 
+
 def _get_link(s, e):
     s_links = _season_episode_links(s)
     key = '{:0>2}x{:0>2}'.format(s, e)
     if key in s_links:
         return s_links[key], s, e
     return None, None, None
+
 
 def _download(link, s, e):
     stat_info = os.stat(config.poneys.dir)
@@ -85,10 +89,12 @@ def _download(link, s, e):
     os.chown(tmp_file, uid, gid)
     shutil.move(tmp_file, file)
 
+
 def setup(argparser):
     pass
 
-def use(args):
+
+async def use(args):
     tv_shows = plex.library.section('TV Shows')
     mlp = tv_shows.get('My Little Pony: Friendship is Magic')
 
@@ -104,7 +110,7 @@ def use(args):
     if link is None:
         link, s, e = _get_link(last_season.index + 1, 1)
     if link is not None:
-        notifications.notify('Started downloading poneys S{:0>2}E{:0>2}'.format(s, e), sound='yay.aiff')
+        await notifications.notify('Started downloading poneys S{:0>2}E{:0>2}'.format(s, e), sound='yay.aiff')
         _download(link, s, e)
-        notifications.notify('Downloaded poneys S{:0>2}E{:0>2}'.format(s, e), sound='yay.aiff')
+        await notifications.notify('Downloaded poneys S{:0>2}E{:0>2}'.format(s, e), sound='yay.aiff')
         tv_shows.update()

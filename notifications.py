@@ -1,10 +1,13 @@
-import socket, ssl, json, struct
+import ssl, json, struct
 import binascii
 import config
+import asyncio
+from db import redis
 
 _apns_host = 'gateway.sandbox.push.apple.com' if config.notifications.apns_sandbox else 'gateway.push.apple.com'
 
-def notify(message, sound='default', badge=0):
+
+async def notify(message, sound='default', badge=0):
     payload = json.dumps({
         'aps': {
             'alert': message,
@@ -13,20 +16,42 @@ def notify(message, sound='default', badge=0):
         },
     }).encode('utf-8')
 
-    chunk_fmt = '!BH32sH%ds' % len(payload)
+    chunk_fmt = '>BIBH32sBH%dsBHI' % len(payload)
+    frame_len = struct.calcsize(chunk_fmt) - 5
 
+    _, herald_push_tokens = redis.sscan('herald_push_tokens')
     chunks = map(
-        lambda push_token:
-            struct.pack(chunk_fmt, 0, 32, push_token, len(payload), payload),
-        map(binascii.unhexlify, config.notifications.apns_push_tokens)
-    )
+        lambda index__push_token:
+            struct.pack(chunk_fmt,
+                        2,
+                        frame_len,
+                        1, 32, binascii.unhexlify(index__push_token[1]),
+                        2, len(payload), payload,
+                        3, 4, index__push_token[0]),
+        enumerate(herald_push_tokens))
 
-    ssl_sock = ssl.wrap_socket(
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM),
-        certfile=config.notifications.apns_cert,
-        keyfile=config.notifications.apns_key
-    )
-    ssl_sock.connect((_apns_host, 2195))
+    ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+    ssl_context.load_cert_chain(config.notifications.apns_cert, config.notifications.apns_key)
+
+    async def connect():
+        return await asyncio.open_connection(host=_apns_host, port=2195, ssl=ssl_context)
+    r, w = None, None
+
     for chunk in chunks:
-        ssl_sock.write(chunk)
-    ssl_sock.close()
+        if w is None:
+            r, w = await connect()
+        w.write(chunk)
+        await w.drain()
+        try:
+            response = await asyncio.wait_for(r.read(6), 1)
+            cmd, status, index = struct.unpack('>BBI', response)
+            if status == 8:
+                print('Delete', herald_push_tokens[index])
+                redis.srem('herald_push_tokens', herald_push_tokens[index])
+            w.close()
+            r, w = None, None
+        except asyncio.TimeoutError:
+            pass
+
+    if w is not None:
+        w.close()
