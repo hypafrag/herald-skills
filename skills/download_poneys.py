@@ -3,13 +3,14 @@ from html.parser import HTMLParser
 import urllib.request
 import urllib.error
 import shutil
-import config
 import re
 import requests
 import notifications
 import os
 
 plex = PlexServer('http://{}:{}'.format(os.environ['HS_PLEX_HOST'], os.environ['HS_PLEX_PORT']), os.environ['HS_PLEX_ONLINE_TOKEN'])
+
+poneys_dir = os.environ['HS_PONEYS_DIR']
 
 
 class _YPParser(HTMLParser):
@@ -64,12 +65,12 @@ def _get_link(s, e):
 
 
 def _download(link, s, e):
-    stat_info = os.stat(config.poneys.dir)
+    stat_info = os.stat(poneys_dir)
     uid = stat_info.st_uid
     gid = stat_info.st_gid
 
     tmp_file = '/tmp/MLP{:0>2}x{:0>2}.mkv'.format(s, e)
-    file = '{}/My Little Pony: Friendship Is Magick {:0>2}x{:0>2}.mkv'.format(config.poneys.dir, s, e)
+    file = '{}/My Little Pony: Friendship Is Magick {:0>2}x{:0>2}.mkv'.format(poneys_dir, s, e)
 
     r = requests.get(link, stream=True)
     print('Downloading', link)
