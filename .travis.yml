@@ -1,0 +1,12 @@
+dist: trusty
+
+jobs:
+  include:
+    - stage: deploy
+      script:
+      - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - docker build -t $DOCKER_IMAGE .
+      - docker push $DOCKER_IMAGE
+#    - stage: test
+#      script: docker run --rm $DOCKER_USERNAME/travis-ci-build-stages-demo cat hello.txt
+#    - script: docker run --rm $DOCKER_USERNAME/travis-ci-build-stages-demo cat hello.txt
