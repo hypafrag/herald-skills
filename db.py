@@ -1,7 +1,7 @@
 import redis
-import config
+import os
 
-redis = redis.Redis(host=config.redis.host,
-                    port=config.redis.port,
-                    db=config.redis.db,
-                    password=config.redis.password)
+redis = redis.Redis(host=os.environ['HS_REDIS_HOST'],
+                    port=os.environ['HS_REDIS_PORT'],
+                    db=0,
+                    password=os.environ['HS_REDIS_PASSWORD'])

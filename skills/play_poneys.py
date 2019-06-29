@@ -7,6 +7,7 @@ import time
 import requests.exceptions
 import config
 import kodi_rpc
+import os
 
 plex = PlexServer('http://{}:{}'.format(config.plex.host, config.plex.port), config.plex.onlineToken)
 apple_tv = pyatv.AppleTVDevice(config.apple_tv.name, config.apple_tv.host, config.apple_tv.loginId)
@@ -46,7 +47,7 @@ def _get_plex_client():
     client = None
     for i in range(0, 12):
         try:
-            client = plex.client(config.plex.clientName)
+            client = plex.client(os.environ['HS_PLEX_PLAYER_NAME'])
             break
         except plexapi.exceptions.NotFound:
             time.sleep(0.5)

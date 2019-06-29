@@ -9,7 +9,7 @@ import requests
 import notifications
 import os
 
-plex = PlexServer('http://{}:{}'.format(config.plex.host, config.plex.port), config.plex.onlineToken)
+plex = PlexServer('http://{}:{}'.format(os.environ['HS_PLEX_HOST'], os.environ['HS_PLEX_PORT']), os.environ['HS_PLEX_ONLINE_TOKEN'])
 
 
 class _YPParser(HTMLParser):
@@ -46,7 +46,7 @@ class _YPParser(HTMLParser):
 
 def _season_episode_links(i):
     parser = _YPParser()
-    url = config.poneys.seasonListUrlTemplate.format(i)
+    url = 'https://yp1.yayponies.no/videos/tables/1i{}.html'.format(i)
     try:
         parser.feed(urllib.request.urlopen(url).read().decode('utf-8'))
     except urllib.error.HTTPError:
@@ -72,6 +72,7 @@ def _download(link, s, e):
     file = '{}/My Little Pony: Friendship Is Magick {:0>2}x{:0>2}.mkv'.format(config.poneys.dir, s, e)
 
     r = requests.get(link, stream=True)
+    print('Downloading', link)
     if r.status_code == 200:
         with open(tmp_file, 'wb') as f:
             r.raw.decode_content = True
@@ -114,3 +115,5 @@ async def use(args):
         _download(link, s, e)
         await notifications.notify('Downloaded poneys S{:0>2}E{:0>2}'.format(s, e), sound='yay.aiff')
         tv_shows.update()
+    else:
+        print('Latest is S{}E{}'.format(last_season.index, last_episode.index))
